@@ -7,7 +7,7 @@ from email.mime.multipart import MIMEMultipart
 NEWS_API_KEY = "4dbece8fc9244f2981f44f59c44e87a1"
 AI_API_KEY = "AIzaSyDL9zu9E6GDyR3_bvlEaktqLSpqNVWQOmk"
 SENDER_EMAIL = "magpetacc@gmail.com"
-SENDER_PASSWORD = "xals uqzd racu puii"
+SENDER_PASSWORD = "xalsuqzdracupuii"
 " # Use App Passwords, not your real password
 
 def get_news(category):
