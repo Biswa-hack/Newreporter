@@ -1,0 +1,30 @@
+name: Daily Intelligence Dispatch
+
+on:
+  schedule:
+    # This runs at 08:00 AM UTC every day
+    - cron: '0 8 * * *'
+  workflow_dispatch: # Allows you to run it manually for testing
+
+jobs:
+  run-news-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Execute News Script
+        env:
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        run: python main.py
