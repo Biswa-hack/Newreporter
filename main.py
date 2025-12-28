@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 # --- CONFIGURATION ---
 NEWS_API_KEY = "4dbece8fc9244f2981f44f59c44e87a1"
 AI_API_KEY = "AIzaSyDL9zu9E6GDyR3_bvlEaktqLSpqNVWQOmk"
-SENDER_EMAIL = "biswajitmechak@gmail.com"
+SENDER_EMAIL = "magpetacc@gmail.com"
 SENDER_PASSWORD = "xals uqzd racu puii"
 " # Use App Passwords, not your real password
 
