@@ -15,123 +15,126 @@ SENDER_PASSWORD = os.getenv("EMAIL_PASS")
 genai.configure(api_key=GEMINI_API_KEY)
 ai_model = genai.GenerativeModel('gemini-1.5-flash')
 
-# --- IMPROVED NEWS ENGINE (Includes India) ---
+# --- 1. ENHANCED NEWS ENGINE (India Focus) ---
 def get_premium_news():
-    # Adding Indian-specific sources and general high-authority ones
-    trusted_domains = "reuters.com,bloomberg.com,wsj.com,indianexpress.com,economictimes.indiatimes.com,thehindu.com"
+    # Including top Indian and Global financial outlets
+    trusted_domains = "economictimes.indiatimes.com,livemint.com,reuters.com,bloomberg.com,business-standard.com,indianexpress.com"
     
-    # Expanded categories
     queries = {
-        'INDIA INTELLIGENCE': 'India economy OR India geopolitics OR RBI',
-        'GLOBAL BANKING': 'central banks OR federal reserve OR interest rates',
-        'GEOPOLITICS': 'international relations OR trade war OR conflict',
-        'FINANCIAL MARKETS': 'stock market OR crypto OR gold'
+        '🇮🇳 INDIA MACRO': 'India economy OR RBI OR Sensex OR Nifty',
+        '🏦 BANKING & FINANCE': 'global banking OR central banks OR interest rates',
+        '🌍 GEOPOLITICS': 'India trade relations OR US-China trade OR Middle East economy',
+        '🚀 TECH & INNOVATION': 'AI regulation OR semiconductor industry OR startup funding India'
     }
     
     curated_articles = []
     for label, q in queries.items():
-        url = (f"[https://newsapi.org/v2/everything?q=](https://newsapi.org/v2/everything?q=){q}&domains={trusted_domains}"
+        url = (f"https://newsapi.org/v2/everything?q={q}&domains={trusted_domains}"
                f"&language=en&sortBy=publishedAt&pageSize=4&apiKey={NEWS_API_KEY}")
         try:
             response = requests.get(url).json()
             articles = response.get('articles', [])
             for art in articles:
-                art['custom_category'] = label
-                curated_articles.append(art)
+                if art.get('title') and art.get('description'): # Filter out empty results
+                    art['custom_category'] = label
+                    curated_articles.append(art)
         except Exception:
             continue
-            
     return curated_articles
 
-# --- ROBUST AI ANALYST ---
+# --- 2. ADVANCED AI ANALYST (Fixing "Analysis Unavailable") ---
 def perform_deep_analysis(article):
-    # We explicitly tell the AI NOT to use markdown code blocks
     prompt = f"""
-    Analyze this news for a professional briefing. Return ONLY the HTML content.
-    Do not use ```html tags. 
-
-    Title: {article['title']}
-    Content: {article['description']}
-
-    Format:
-    <p><strong>CONTEXT:</strong> [1 sentence brief context]</p>
-    <p><strong>STRATEGIC ANALYSIS:</strong> [Deep insight into impact on finance/geopolitics]</p>
+    Act as a Lead Strategist for a Tier-1 Investment Bank. 
+    Analyze this news item for high-level decision makers. 
     
-    <table border="1" style="width:100%; border-collapse: collapse; font-size: 12px; margin: 10px 0;">
-        <tr style="background-color: #f2f2f2;">
-            <th style="padding: 5px; width: 50%;">PROS / UPSIDE</th>
-            <th style="padding: 5px; width: 50%;">CONS / RISK</th>
-        </tr>
-        <tr>
-            <td style="padding: 5px; color: #155724;">[Positive point]</td>
-            <td style="padding: 5px; color: #721c24;">[Negative point]</td>
-        </tr>
-    </table>
+    NEWS: {article['title']}
+    SUMMARY: {article['description']}
+
+    Return ONLY the following HTML structure (no Markdown, no ```html blocks):
+    <div style="margin-top:10px;">
+        <p><strong>BRIEF CONTEXT:</strong> [Explain the 'why' behind this news in 1 sentence]</p>
+        <p><strong>STRATEGIC ANALYSIS:</strong> [Explain the long-term impact on Indian or Global markets]</p>
+        <table border="0" cellpadding="8" style="width:100%; background-color:#f8f9fa; border-radius:5px; font-size:12px;">
+            <tr>
+                <td style="color:#1b5e20; width:50%;"><strong>🟢 PROS / OPPORTUNITY:</strong> [Point]</td>
+                <td style="color:#b71c1c; width:50%;"><strong>🔴 CONS / RISK:</strong> [Point]</td>
+            </tr>
+        </table>
+    </div>
     """
     try:
         response = ai_model.generate_content(prompt)
-        # Clean the response in case the AI adds markdown blocks
-        clean_text = response.text.replace("```html", "").replace("```", "").strip()
-        return clean_text
-    except Exception as e:
-        return f"<em>Analysis pending for this story.</em>"
+        # Force remove any potential markdown tags that cause rendering issues
+        content = response.text.replace("```html", "").replace("```", "").strip()
+        return content
+    except Exception:
+        return "<p><em>Strategic analysis currently under review by AI engine.</em></p>"
 
-# --- NEWSLETTER DESIGN ---
+# --- 3. NEWSLETTER TEMPLATE ---
 def build_newsletter(content_html):
-    date_str = datetime.now().strftime("%B %d, 2025")
+    date_str = datetime.now().strftime("%B %d, %Y")
     return f"""
     <html>
-    <body style="font-family: Arial, sans-serif; color: #111; background-color: #f9f9f9; padding: 10px;">
-        <div style="max-width: 700px; margin: auto; background: white; padding: 30px; border: 1px solid #eee;">
-            <div style="text-align: center; border-bottom: 5px solid #1a1a1a; padding-bottom: 10px; margin-bottom: 25px;">
-                <h1 style="margin: 0; font-family: 'Georgia', serif; font-size: 36px;">THE DAILY INTEL</h1>
-                <p style="margin: 5px 0; color: #555; font-size: 14px; letter-spacing: 2px;">INDIA • GLOBAL FINANCE • GEOPOLITICS</p>
-                <p style="font-size: 12px; color: #999;">{date_str}</p>
+    <head>
+        <style>
+            body {{ font-family: 'Georgia', serif; line-height: 1.6; color: #333; }}
+            .category {{ background: #000; color: #fff; padding: 2px 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }}
+            .headline {{ color: #b71c1c; font-size: 24px; margin: 10px 0; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px; }}
+            .source {{ font-size: 12px; color: #777; font-style: italic; }}
+        </style>
+    </head>
+    <body style="background-color: #f0f0f0; padding: 20px;">
+        <div style="max-width: 800px; margin: auto; background: #fff; padding: 40px; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <div style="text-align: center; border-bottom: 4px double #000; padding-bottom: 10px; margin-bottom: 30px;">
+                <h1 style="margin: 0; font-size: 42px; font-weight: bold; letter-spacing: -1px;">THE DAILY INTEL</h1>
+                <p style="margin: 5px 0; font-family: Arial, sans-serif; font-size: 14px; letter-spacing: 3px; font-weight: bold; color: #555;">INDIA • GLOBAL FINANCE • GEOPOLITICS</p>
+                <p style="font-family: Arial; font-size: 12px; color: #888;">{date_str} | Intelligence Bot 2.0</p>
             </div>
             {content_html}
-            <div style="text-align: center; font-size: 10px; color: #ccc; margin-top: 30px; padding-top: 10px; border-top: 1px solid #eee;">
-                Intelligence Bot Version 2.0 | Automated Analysis
+            <div style="text-align: center; border-top: 1px solid #ddd; padding-top: 20px; font-size: 10px; color: #999; font-family: Arial;">
+                This document is intended for private use only. Powered by Gemini 1.5 Flash AI Engine.
             </div>
         </div>
     </body>
     </html>
     """
 
-def dispatch_email(html_report):
+# --- 4. DISPATCH ---
+def dispatch(report):
     with open("recipients.txt", "r") as f:
-        emails = [line.strip() for line in f.readlines() if line.strip()]
+        list_emails = [line.strip() for line in f.readlines() if line.strip()]
 
-    for target in emails:
+    for target in list_emails:
         msg = MIMEMultipart()
         msg['From'] = SENDER_EMAIL
         msg['To'] = target
-        msg['Subject'] = f"📊 Intel Report: {datetime.now().strftime('%d %b %Y')}"
-        msg.attach(MIMEText(html_report, 'html'))
-        
+        msg['Subject'] = f"📊 Intel Briefing: {datetime.now().strftime('%d %B')}"
+        msg.attach(MIMEText(report, 'html'))
         try:
             with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
                 server.login(SENDER_EMAIL, SENDER_PASSWORD)
                 server.send_message(msg)
-            print(f"✅ Sent to {target}")
+            print(f"✅ Dispatched to {target}")
         except Exception as e:
-            print(f"❌ Failed: {e}")
+            print(f"❌ Error for {target}: {e}")
 
 if __name__ == "__main__":
+    print("Gathering news...")
     news_items = get_premium_news()
-    body_parts = []
-    
-    # Process news
+    html_sections = []
+
     for item in news_items:
         analysis = perform_deep_analysis(item)
         section = f"""
-        <div style="margin-bottom: 40px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
-            <div style="background: #1a1a1a; color: white; display: inline-block; padding: 2px 10px; font-size: 11px; font-weight: bold; margin-bottom: 10px;">{item['custom_category']}</div>
-            <h2 style="margin: 0 0 15px 0; color: #c0392b; font-size: 24px; line-height: 1.2;">{item['title']}</h2>
+        <div style="margin-bottom: 40px;">
+            <span class="category">{item['custom_category']}</span>
+            <div class="headline">{item['title']}</div>
+            <div class="source">Reported by {item['source']['name']}</div>
             {analysis}
-            <p style="font-size: 12px;"><a href="{item['url']}" style="color: #007bff; text-decoration: none;">View Original Source via {item['source']['name']} →</a></p>
+            <div style="margin-top: 10px;"><a href="{item['url']}" style="color: #0d47a1; text-decoration: none; font-size: 13px;">Full Story & Data Charts →</a></div>
         </div>
         """
-        body_parts.append(section)
-    
-    final_report = build_newsletter("".join(body_parts))
-    dispatch_email(final_report)
+        html_sections.append(section)
+
+    dispatch(build_newsletter("".join(html_sections)))
