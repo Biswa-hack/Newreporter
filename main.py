@@ -4,10 +4,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # --- CONFIGURATION ---
-NEWS_API_KEY = "your_news_api_key"
-AI_API_KEY = "your_llm_api_key"
-SENDER_EMAIL = "your-email@gmail.com"
-SENDER_PASSWORD = "your-app-password" # Use App Passwords, not your real password
+NEWS_API_KEY = "4dbece8fc9244f2981f44f59c44e87a1"
+AI_API_KEY = "AIzaSyDL9zu9E6GDyR3_bvlEaktqLSpqNVWQOmk"
+SENDER_EMAIL = "biswajitmechak@gmail.com"
+SENDER_PASSWORD = "xals uqzd racu puii
+" # Use App Passwords, not your real password
 
 def get_news(category):
     url = f"https://newsapi.org/v2/top-headlines?category={category}&apiKey={NEWS_API_KEY}"
