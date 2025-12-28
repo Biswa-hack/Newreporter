@@ -6,95 +6,98 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
-# --- 1. SECURE CONFIGURATION ---
+# --- CONFIG ---
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 SENDER_EMAIL = os.getenv("EMAIL_USER")
 SENDER_PASSWORD = os.getenv("EMAIL_PASS")
 
-# Initialize Gemini 1.5 Flash
 genai.configure(api_key=GEMINI_API_KEY)
 ai_model = genai.GenerativeModel('gemini-1.5-flash')
 
-# --- 2. HIGH-QUALITY NEWS ENGINE ---
+# --- IMPROVED NEWS ENGINE (Includes India) ---
 def get_premium_news():
-    """Fetches high-quality news from trusted financial and geopolitical sources."""
-    trusted_sources = "reuters.com,bloomberg.com,wsj.com,ft.com,economist.com,cnbc.com"
-    queries = ['central banking', 'geopolitics', 'global markets', 'national economy']
+    # Adding Indian-specific sources and general high-authority ones
+    trusted_domains = "reuters.com,bloomberg.com,wsj.com,indianexpress.com,economictimes.indiatimes.com,thehindu.com"
+    
+    # Expanded categories
+    queries = {
+        'INDIA INTELLIGENCE': 'India economy OR India geopolitics OR RBI',
+        'GLOBAL BANKING': 'central banks OR federal reserve OR interest rates',
+        'GEOPOLITICS': 'international relations OR trade war OR conflict',
+        'FINANCIAL MARKETS': 'stock market OR crypto OR gold'
+    }
     
     curated_articles = []
-    for q in queries:
-        url = (f"https://newsapi.org/v2/everything?q={q}&domains={trusted_sources}"
-               f"&language=en&sortBy=relevancy&pageSize=2&apiKey={NEWS_API_KEY}")
+    for label, q in queries.items():
+        url = (f"[https://newsapi.org/v2/everything?q=](https://newsapi.org/v2/everything?q=){q}&domains={trusted_domains}"
+               f"&language=en&sortBy=publishedAt&pageSize=4&apiKey={NEWS_API_KEY}")
         try:
             response = requests.get(url).json()
             articles = response.get('articles', [])
             for art in articles:
-                art['custom_category'] = q.upper()
+                art['custom_category'] = label
                 curated_articles.append(art)
-        except Exception as e:
-            print(f"Error fetching {q}: {e}")
+        except Exception:
+            continue
             
     return curated_articles
 
-# --- 3. PROFESSIONAL AI ANALYST ---
+# --- ROBUST AI ANALYST ---
 def perform_deep_analysis(article):
-    """Uses AI to generate impact analysis, pros, and cons."""
+    # We explicitly tell the AI NOT to use markdown code blocks
     prompt = f"""
-    Act as a Lead Financial Analyst. Analyze this report:
-    Title: {article['title']}
-    Source: {article['source']['name']}
-    Description: {article['description']}
+    Analyze this news for a professional briefing. Return ONLY the HTML content.
+    Do not use ```html tags. 
 
-    Format the output in HTML:
-    <strong>EXECUTIVE SUMMARY:</strong> [1 sentence summary] <br>
-    <strong>MARKET IMPACT:</strong> [How this affects banking/finance] <br>
-    <strong>GEOPOLITICAL SHIFT:</strong> [How this affects international news] <br>
+    Title: {article['title']}
+    Content: {article['description']}
+
+    Format:
+    <p><strong>CONTEXT:</strong> [1 sentence brief context]</p>
+    <p><strong>STRATEGIC ANALYSIS:</strong> [Deep insight into impact on finance/geopolitics]</p>
     
-    <table border="1" style="width:100%; border-collapse: collapse; margin-top:10px; font-size: 13px;">
-        <tr style="background-color: #f8f9fa;">
-            <th style="padding: 5px; color: #2ecc71;">PROS / OPPORTUNITIES</th>
-            <th style="padding: 5px; color: #e74c3c;">CONS / RISKS</th>
+    <table border="1" style="width:100%; border-collapse: collapse; font-size: 12px; margin: 10px 0;">
+        <tr style="background-color: #f2f2f2;">
+            <th style="padding: 5px; width: 50%;">PROS / UPSIDE</th>
+            <th style="padding: 5px; width: 50%;">CONS / RISK</th>
         </tr>
         <tr>
-            <td style="padding: 8px;">[Bullet point of positive outcome]</td>
-            <td style="padding: 8px;">[Bullet point of potential risk]</td>
+            <td style="padding: 5px; color: #155724;">[Positive point]</td>
+            <td style="padding: 5px; color: #721c24;">[Negative point]</td>
         </tr>
     </table>
     """
     try:
         response = ai_model.generate_content(prompt)
-        return response.text
-    except Exception:
-        return "Analysis currently unavailable for this story."
+        # Clean the response in case the AI adds markdown blocks
+        clean_text = response.text.replace("```html", "").replace("```", "").strip()
+        return clean_text
+    except Exception as e:
+        return f"<em>Analysis pending for this story.</em>"
 
-# --- 4. NEWSLETTER DESIGN (HTML) ---
+# --- NEWSLETTER DESIGN ---
 def build_newsletter(content_html):
-    date_str = datetime.now().strftime("%B %d, %2025")
+    date_str = datetime.now().strftime("%B %d, 2025")
     return f"""
     <html>
-    <body style="font-family: 'Times New Roman', Times, serif; color: #1a1a1a; background-color: #f4f4f4; padding: 20px;">
-        <div style="max-width: 650px; margin: auto; background: white; padding: 40px; border: 1px solid #ccc;">
-            <div style="text-align: center; border-bottom: 4px double #000; padding-bottom: 10px; margin-bottom: 20px;">
-                <h1 style="margin: 0; font-size: 32px; letter-spacing: 1px;">THE GLOBAL INTELLIGENCE</h1>
-                <p style="margin: 5px 0; color: #666; text-transform: uppercase;">Finance • Geopolitics • Banking</p>
-                <p style="font-size: 14px;">{date_str}</p>
+    <body style="font-family: Arial, sans-serif; color: #111; background-color: #f9f9f9; padding: 10px;">
+        <div style="max-width: 700px; margin: auto; background: white; padding: 30px; border: 1px solid #eee;">
+            <div style="text-align: center; border-bottom: 5px solid #1a1a1a; padding-bottom: 10px; margin-bottom: 25px;">
+                <h1 style="margin: 0; font-family: 'Georgia', serif; font-size: 36px;">THE DAILY INTEL</h1>
+                <p style="margin: 5px 0; color: #555; font-size: 14px; letter-spacing: 2px;">INDIA • GLOBAL FINANCE • GEOPOLITICS</p>
+                <p style="font-size: 12px; color: #999;">{date_str}</p>
             </div>
             {content_html}
-            <div style="text-align: center; font-size: 11px; color: #aaa; margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px;">
-                Generated by AI Intelligence System | Proprietary Content
+            <div style="text-align: center; font-size: 10px; color: #ccc; margin-top: 30px; padding-top: 10px; border-top: 1px solid #eee;">
+                Intelligence Bot Version 2.0 | Automated Analysis
             </div>
         </div>
     </body>
     </html>
     """
 
-# --- 5. DISPATCH SYSTEM ---
 def dispatch_email(html_report):
-    if not os.path.exists("recipients.txt"):
-        print("recipients.txt missing.")
-        return
-
     with open("recipients.txt", "r") as f:
         emails = [line.strip() for line in f.readlines() if line.strip()]
 
@@ -102,32 +105,30 @@ def dispatch_email(html_report):
         msg = MIMEMultipart()
         msg['From'] = SENDER_EMAIL
         msg['To'] = target
-        msg['Subject'] = f"📊 Intel Brief: {datetime.now().strftime('%d %b')}"
+        msg['Subject'] = f"📊 Intel Report: {datetime.now().strftime('%d %b %Y')}"
         msg.attach(MIMEText(html_report, 'html'))
         
         try:
             with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
                 server.login(SENDER_EMAIL, SENDER_PASSWORD)
                 server.send_message(msg)
-            print(f"✅ Dispatched to {target}")
+            print(f"✅ Sent to {target}")
         except Exception as e:
-            print(f"❌ Dispatch failed for {target}: {e}")
+            print(f"❌ Failed: {e}")
 
 if __name__ == "__main__":
-    print("🚀 Starting Intelligence Gathering...")
     news_items = get_premium_news()
-    
     body_parts = []
+    
+    # Process news
     for item in news_items:
         analysis = perform_deep_analysis(item)
         section = f"""
-        <div style="margin-bottom: 35px;">
-            <small style="color: #e67e22; font-weight: bold;">{item['custom_category']}</small>
-            <h2 style="margin: 5px 0 10px 0; color: #000; font-size: 22px;">{item['title']}</h2>
-            <div style="font-size: 15px; color: #333;">
-                {analysis}
-            </div>
-            <p style="font-size: 13px;"><a href="{item['url']}" style="color: #0056b3;">Source: {item['source']['name']} →</a></p>
+        <div style="margin-bottom: 40px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+            <div style="background: #1a1a1a; color: white; display: inline-block; padding: 2px 10px; font-size: 11px; font-weight: bold; margin-bottom: 10px;">{item['custom_category']}</div>
+            <h2 style="margin: 0 0 15px 0; color: #c0392b; font-size: 24px; line-height: 1.2;">{item['title']}</h2>
+            {analysis}
+            <p style="font-size: 12px;"><a href="{item['url']}" style="color: #007bff; text-decoration: none;">View Original Source via {item['source']['name']} →</a></p>
         </div>
         """
         body_parts.append(section)
